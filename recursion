@@ -1,0 +1,54 @@
+async def get_lines(body,res,p,v):
+    for line in body:
+        if line not in res:
+            res[line] = {
+                "total_lines":[],
+                "total_machines":[]
+            }
+        res["total_lines"].append(line)
+        p.append(line)
+        if "lines" in body[line] and not body[line]["lines"]=={}:
+            v = v+1
+            await get_lines(body[line]["lines"],res,p,v)
+            v = v - 1
+            res[line]["total_lines"] = p[v:]
+            print("v data ",v,p,p[v],line)
+            res[line]["total_machines"] = res[p[v+1]]["total_machines"]
+
+        if "machines" in body[line]:
+            print("--- ",line)
+            ddd = list(body[line]["machines"].keys())
+            res[line]["total_machines"] = ddd[:]
+            res["total_machines"].extend(ddd)
+        
+        if v==0:
+            p = []
+
+async def get_locations(body,res,l=[],c=0):
+    for loc in body:
+        if loc not in res:
+            res[loc] = {
+                "total_lines":[],
+                "total_machines":[],
+                "total_locations":[]
+            }
+        l.append(loc)
+        if "locations" in body[loc] and  not body[loc]["locations"]=={}:
+            c = c+1
+            await get_locations(body[loc]["locations"],res,l,c)
+            c = c-1
+            res[loc]["total_locations"] = l[c:]
+            print("loccc ",loc,l[c],res[l[c]]["total_lines"])
+            res[loc]["total_lines"] = res[l[c+1]]["total_lines"][:]
+            res[loc]["total_machines"] = res[l[c+1]]["total_machines"][:]
+        print("the lines ",l,c)
+        
+        if "lines" in body[loc]:
+            await get_lines(body[loc]["lines"],res[loc],p=[],v=0)
+            # res[loc]["total_machines"] = []
+            # p = []
+        if "machines" in body[loc]:
+            res[loc]["total_machines"] = list(body[loc]["machines"].keys())
+
+        if c==0:
+            l = []
