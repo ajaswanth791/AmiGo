@@ -1,0 +1,86 @@
+import xlsxwriter
+
+from data import result, headers, allowed_merge
+
+workbook = xlsxwriter.Workbook("newfile.xlsx")
+worksheet = workbook.add_worksheet()
+
+for ind,val in enumerate(headers):
+    worksheet.write(0,ind,val)
+
+response = []
+
+for category in result:
+    record =[category]
+    for sub_category in result[category]:
+        new_record_one = record[:]
+        record.append(sub_category)
+        next_loop = result[category][sub_category]
+        units = next_loop["units"]
+        total_product = next_loop["data"]["produced"]
+        for machine in next_loop["machines"]:
+            new_record_two = record[:]
+            record.append(machine)
+            products = next_loop["machines"][machine]
+            for product in products:
+                new_record_three = record[:]
+                record.append(product)
+                values = products[product]
+                produced = values["produced"]
+                weight = values["produced_weight"]
+                record.extend([produced,weight,units,total_product])
+
+                response.append(record)
+                record = new_record_three[:]
+            record = new_record_two[:]
+        record = new_record_one[:]
+
+row = 1
+for record in response:
+    for ind,val in enumerate(record):
+        worksheet.write(row,ind,val)
+    row += 1
+
+# rint(val, ind, row, record)
+#             if val == response[row-1][ind]:
+#                 worksheet.merge_range(row,ind,row+1,ind,val)
+#         row += 1
+
+format = workbook.add_format({"bold":True,"align":"center"})
+format.set_align('vcenter')
+
+row = 1
+mergered_dict = {}
+while row < len(response):
+    try:
+        record = response[row]
+        for ind,val in enumerate(record):
+            if val == response[row-1][ind]:
+                if ind not in mergered_dict:
+                    mergered_dict[ind] = {}
+                if "start" not in mergered_dict[ind]:
+                    mergered_dict[ind]["start"] = [row,ind]
+                
+                mergered_dict[ind]["end"] = [row+1,ind,val]
+            else:
+                if ind in mergered_dict:
+                    st_row = mergered_dict[ind].get("start",None)
+                    en_row= mergered_dict[ind].get("end",None)
+
+                    if st_row and en_row and headers[ind] in allowed_merge:
+                        worksheet.merge_range(*st_row,*en_row, format)
+                mergered_dict[ind] = {}
+        row += 1
+    except Exception as error:
+        print(error)
+        break
+
+
+for record in mergered_dict:
+    start = mergered_dict[record].get("start",None) 
+    end = mergered_dict[record].get("end",None)
+    if start and end and headers[start[-1]] in allowed_merge:
+        worksheet.merge_range(*start,*end, format)
+
+
+workbook.close()
