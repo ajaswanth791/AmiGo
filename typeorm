@@ -1,0 +1,56 @@
+async insertData(){
+    // const data: QueryDeepPartialEntity<machine> = [];
+    // data.push({
+      
+    // })
+    const data = [
+      {
+        "id":11,
+        "name": "Mac92",
+        "location":1,
+      },
+      {
+        "id":12,
+        "name":"Mac94",
+        "location":1
+      }
+    ]
+
+    const result = data.map(data=>{
+      const mac = new machine();
+      const loc = new Location();
+      
+      loc.id = data.location;
+      mac.name = data.name,
+      mac.location = loc
+
+      return mac;
+    })
+
+    console.log("the result ", result);
+    
+
+    const response = await this.machine_repo.save(result);
+
+    console.log("the response ", result);
+    
+    
+    // const loca = new Location();
+    // loca.id = 1;
+
+    // const result = await this.machine_repo.createQueryBuilder()
+    //   .insert()
+    //   .into(machine)
+    //   .values(
+    //     [
+    //       {id:8,name:"Machine033",location:loca},
+    //       {id:9,name:"Machne055",location:loca}
+    //     ]
+    //   ).orUpdate(
+    //    ['name','location'] 
+    //   )
+    //   .execute()
+
+    // console.log("the resutl ", result);
+    
+  }
